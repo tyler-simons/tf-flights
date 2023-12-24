@@ -100,7 +100,7 @@ if submitted:
     tail_data = full_data[full_data["tail_number"] == tn]
 
     # if the tail number is in the data
-    if tail_data.shape[0] > 0:
+    if tail_data.shape[0] > 0 and plane_info:
         st.info("You've flown this plane before! Adding flight entry...")
 
         # Add the info to full_data
@@ -119,6 +119,30 @@ if submitted:
                 "engine_model": plane_info["engine_model"],
                 "engine_manufacturer": plane_info["engine_manufacturer"],
                 "aircraft_type": plane_info["aircraft_type"],
+            },
+            ignore_index=True,
+        )
+        full_data, conn = get_data()
+        new_data = conn.update(data=new_data)
+        st.cache_data.clear()
+        full_data = new_data
+
+    elif tail_data.shape[0] > 0 and not plane_info:
+        st.info("You've flown this plane before! Adding flight entry...")
+        new_data = full_data.append(
+            {
+                "date": dt,
+                "tail_number": tn,
+                "origin": origin,
+                "destination": destination,
+                "registered_owner": None,
+                "serial_number": None,
+                "manufacturer": None,
+                "model": None,
+                "manufactured_year": None,
+                "engine_model": None,
+                "engine_manufacturer": None,
+                "aircraft_type": None,
             },
             ignore_index=True,
         )
