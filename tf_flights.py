@@ -152,21 +152,22 @@ if submitted:
         full_data = new_data
 
     # Display the info
-    with st.expander("Plane Info", expanded=True):
-        col1, col2 = st.columns(2)
-        with col1:
-            for val in plane_info.items():
-                category = val[0].replace("_", " ").title()
-                value = val[1]
-                st.write(f"**{category}**: {value}")
+    if plane_info:
+        with st.expander("Plane Info", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                for val in plane_info.items():
+                    category = val[0].replace("_", " ").title()
+                    value = val[1]
+                    st.write(f"**{category}**: {value}")
 
-        # Display the dates flown and the origin/destination
-        with col2:
-            st.write("**Flights on this plane**")
-            for row in tail_data.iterrows():
-                st.write(
-                    f"{row[1]['date'].strftime('%m/%d/%Y')}: {row[1]['origin']} to {row[1]['destination']}"
-                )
+            # Display the dates flown and the origin/destination
+            with col2:
+                st.write("**Flights on this plane**")
+                for row in tail_data.iterrows():
+                    st.write(
+                        f"{row[1]['date'].strftime('%m/%d/%Y')}: {row[1]['origin']} to {row[1]['destination']}"
+                    )
 
 
 col1, col2, col3 = st.columns(3)
