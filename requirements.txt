@@ -1,1 +1,4 @@
 streamlit==1.29.0
+st-gsheets-connection==0.0.3
+beautifulsoup4==4.12.2
+airportsdata==20231017

@@ -44,30 +44,40 @@ def ping_plane_info(tail_number: str) -> dict:
             "aw_date": aw_date,
             "engine_manufacturer": engine_manufacturer,
             "aircraft_type": aircraft_type,
-            "date_change_auth": date_change_auth,
         }
-        st.info("Plane found! Adding flight entry")
+
+        return plane_info
     # Add the info to the sheet for each row
     except AttributeError:
-        st.info("Plane not found, adding entry anyway")
+        st.error("No plane info found for this tail number")
         pass
 
-    return plane_info
+    return
 
 
 # Read the data and clean it up
-conn = st.connection("gsheets", type=GSheetsConnection)
-df = conn.read()
-full_data = df[~df["tail_number"].isnull()]
-full_data["origin"] = full_data["origin"].str.upper()
-full_data["destination"] = full_data["destination"].str.upper()
-full_data["date"] = pd.to_datetime(full_data["date"]).dt.date
+def get_data():
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    df = conn.read()
+    full_data = df[~df["tail_number"].isnull()]
+    full_data["origin"] = full_data["origin"].str.upper()
+    full_data["destination"] = full_data["destination"].str.upper()
+    full_data["date"] = pd.to_datetime(full_data["date"]).dt.date
+
+    return full_data, conn
+
+
+full_data, conn = get_data()
 
 airports = airportsdata.load("IATA")  # key is the IATA location code
 airport_codes = sorted(list(airports.keys()))
 
-st.header("Tup's Flight Tracker")
-st.write("Enter new flights and visualize your data. 🛫 Merry Christmas, Tup! 🎄")
+st.header("✈️ Tup's Flight Tracker 🌎")
+st.write(
+    """Enter new flights and visualize your data. Merry Christmas, Tup! Check on the data 
+    [here](https://docs.google.com/spreadsheets/d/1r0CEyglssx3wOljj1R_2VQEc-NsbFtiOxS4ht1cmfCs/edit) 🎄
+"""
+)
 
 # date
 with st.expander("Flight Entry", expanded=True):
@@ -91,16 +101,72 @@ if submitted:
 
     # if the tail number is in the data
     if tail_data.shape[0] > 0:
-        st.info("You've flown this plane before! Adding flight entry")
+        st.info("You've flown this plane before! Adding flight entry...")
 
-        # Display the info
+        # Add the info to full_data
+        new_data = full_data.append(
+            {
+                "date": dt,
+                "tail_number": tn,
+                "origin": origin,
+                "destination": destination,
+                "registered_owner": plane_info["registered_owner"],
+                "serial_number": plane_info["serial_number"],
+                "manufacturer": plane_info["manufacturer"],
+                "model": plane_info["model"],
+                "aw_date": plane_info["aw_date"],
+                "manufactured_year": plane_info["manufactured_year"],
+                "engine_model": plane_info["engine_model"],
+                "engine_manufacturer": plane_info["engine_manufacturer"],
+                "aircraft_type": plane_info["aircraft_type"],
+            },
+            ignore_index=True,
+        )
+        full_data, conn = get_data()
+        new_data = conn.update(data=new_data)
+        st.cache_data.clear()
+        full_data = new_data
 
     else:
-        st.info("New plane! Adding flight entry")
+        st.info("New plane! Adding flight entry...")
+        new_data = full_data.append(
+            {
+                "date": dt,
+                "tail_number": tn,
+                "origin": origin,
+                "destination": destination,
+                "registered_owner": None,
+                "serial_number": None,
+                "manufacturer": None,
+                "model": None,
+                "manufactured_year": None,
+                "engine_model": None,
+                "engine_manufacturer": None,
+                "aircraft_type": None,
+            },
+            ignore_index=True,
+        )
+        full_data, conn = get_data()
+        new_data = conn.update(data=new_data)
+        st.cache_data.clear()
+        full_data = new_data
 
-        # Display the tail number info
+    # Display the info
+    with st.expander("Plane Info", expanded=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            for val in plane_info.items():
+                category = val[0].replace("_", " ").title()
+                value = val[1]
+                st.write(f"**{category}**: {value}")
 
-    # TODO: add the new entry to the data
+        # Display the dates flown and the origin/destination
+        with col2:
+            st.write("**Flights on this plane**")
+            for row in tail_data.iterrows():
+                st.write(
+                    f"{row[1]['date'].strftime('%m/%d/%Y')}: {row[1]['origin']} to {row[1]['destination']}"
+                )
 
 
 col1, col2, col3 = st.columns(3)
@@ -134,9 +200,11 @@ st.altair_chart(chrt, use_container_width=True)
 
 st.subheader("Date Heatmap")
 st.write("Which day of the year do you fly most often?")
+
 # Prepare the data by extracting day and week
 date_data = full_data.copy()
 date_data["date"] = pd.to_datetime(date_data["date"])
+
 # Display as Jan 1
 date_data["display"] = date_data["date"].dt.strftime("%b %d")
 date_data["day"] = date_data["date"].dt.day
@@ -145,7 +213,6 @@ date_data = date_data[["day", "month", "display"]].value_counts().reset_index()
 date_data.columns = ["day", "month", "display", "value"]
 
 # Create the heatmap
-
 color = alt.Color("value:N", scale=alt.Scale(scheme="reds"))
 filt_data = date_data[date_data["value"] > 0]
 heatmap_1 = (
