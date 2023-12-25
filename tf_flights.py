@@ -8,6 +8,8 @@ import time
 import pandas as pd
 import altair as alt
 
+st.set_page_config(page_title="Tup's Flight Tracker", page_icon="✈️")
+
 
 def ping_plane_info(tail_number: str) -> dict:
     """Ping the FAA registry for plane info
