@@ -26,7 +26,6 @@ def ping_plane_info(tail_number: str) -> dict:
             },
         )
         soup = bs(response.content, "html.parser")
-        st.write(soup.text)
 
         # Get plane info
         serial_number = soup.find("td", {"data-label": "Serial Number"}).text.strip()
