@@ -17,38 +17,17 @@ def ping_plane_info(tail_number: str) -> dict:
     """
 
     try:
-        response = requests.get(
-            "https://registry.faa.gov/AircraftInquiry/Search/NNumberResult?nNumberTxt="
-            + str(tail_number),
-            headers={
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36"
-            },
-        )
-        soup = bs(response.content, "html.parser")
-
-        # Get plane info
-        serial_number = soup.find("td", {"data-label": "Serial Number"}).text.strip()
-        manufacturer = soup.find("td", {"data-label": "Manufacturer Name"}).text.strip()
-        model = soup.find("td", {"data-label": "Model"}).text.strip()
-        mfr_year = soup.find("td", {"data-label": "Mfr Year"}).text.strip()
-        registered_owner = soup.find("td", {"data-label": "Name"}).text.strip()
-        engine_model = soup.find("td", {"data-label": "Engine Model"}).text.strip()
-        aw_date = soup.find("td", {"data-label": "A/W Date"}).text.strip()
-        engine_manufacturer = soup.find("td", {"data-label": "Engine Manufacturer"}).text.strip()
-        aircraft_type = soup.find("td", {"data-label": "Aircraft Type"}).text.strip()
-        date_change_auth = soup.find("td", {"data-label": "Date Change Authorized"}).text.strip()
-
+        empty = ""
         plane_info = {
-            "serial_number": serial_number,
-            "manufacturer": manufacturer,
-            "model": model,
-            "manufactured_year": mfr_year,
-            "registered_owner": registered_owner,
-            "engine_model": engine_model,
-            "aw_date": aw_date,
-            "engine_manufacturer": engine_manufacturer,
-            "aircraft_type": aircraft_type,
+            "serial_number": "",
+            "manufacturer": "",
+            "model": "",
+            "manufactured_year": "",
+            "registered_owner": "",
+            "engine_model": "",
+            "aw_date": "",
+            "engine_manufacturer": "",
+            "aircraft_type": "",
         }
 
         return plane_info
@@ -143,14 +122,14 @@ if submitted:
     if plane_info:
         with st.expander("Plane Info", expanded=True):
             col1, col2 = st.columns(2)
-            with col1:
-                for val in plane_info.items():
-                    category = val[0].replace("_", " ").title()
-                    value = val[1]
-                    st.write(f"**{category}**: {value}")
+            # with col1:
+            #     for val in plane_info.items():
+            #         category = val[0].replace("_", " ").title()
+            #         value = val[1]
+            #         st.write(f"**{category}**: {value}")
 
             # Display the dates flown and the origin/destination
-            with col2:
+            with col1:
                 st.write("**Flights on this plane**")
                 for row in tail_data.iterrows():
                     st.write(
