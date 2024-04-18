@@ -114,7 +114,8 @@ if submitted:
         ignore_index=True,
     )
     full_data, conn = get_data()
-    new_data = conn.update(data=new_data)
+    if new_data.shape[0] > full_data.shape[0]:
+        new_data = conn.update(data=new_data)
     st.cache_data.clear()
     full_data = new_data
 
